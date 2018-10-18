@@ -1,7 +1,10 @@
 package com.flexion.javatest;
 
+import org.springframework.stereotype.Component;
+
 import com.flexionmobile.codingchallenge.integration.Purchase;
 
+@Component
 public class FlexionPurchase implements Purchase {
 
 	private boolean consumed;

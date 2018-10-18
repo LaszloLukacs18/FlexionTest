@@ -11,64 +11,70 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.flexionmobile.codingchallenge.integration.Integration;
 import com.flexionmobile.codingchallenge.integration.Purchase;
 import com.google.gson.Gson;
 
+@Component
 public class FlexionIntegration implements Integration {
 	
+    private static final String CLIENT_PROTOCOL_EXCEPTION = "ClientProtocolException occured!";
+	private static final String IO_EXCEPTION = "IO exception occured!";
+	private static final Logger LOGGER = LoggerFactory.getLogger(FlexionIntegration.class);
+	
+	@Autowired
+	private FlexionPurchase flexionPurchase;
+	
+	@Autowired
+	private FlexionPurchaseWrapper flexionPurchaseWrapper;
+	
 	@Override
-	public Purchase buy(String arg0) {
-		Purchase flexionPurchase = new FlexionPurchase();
-		CloseableHttpClient client = HttpClients.createDefault();
-	    HttpPost httpPost = new HttpPost("http://sandbox.flexionmobile.com/javachallenge/rest/developer/​laszlo%20lukacs​/buy/​"+arg0);
-	    try {
-			CloseableHttpResponse response = client.execute(httpPost);
-			HttpEntity entity = response.getEntity();
-		    String content = EntityUtils.toString(entity);
-		    Gson gson = new Gson();
-		    flexionPurchase = gson.fromJson(content, FlexionPurchase.class);
-			client.close();
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+	public Purchase buy(String itemId) {
+		final HttpPost httpPost = new HttpPost("http://sandbox.flexionmobile.com/javachallenge/rest/developer/​laszlo%20lukacs​/buy/​"+itemId);
+	    try (final CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
+	    	final CloseableHttpResponse response = closeableHttpClient.execute(httpPost);) {
+			final HttpEntity entity = response.getEntity();
+		    final String responseContent = EntityUtils.toString(entity);
+		    final Gson gson = new Gson();
+		    flexionPurchase = gson.fromJson(responseContent, FlexionPurchase.class);
+	    } catch (IOException ioException) {
+			LOGGER.error(IO_EXCEPTION + ioException.getMessage());
 		}
 		return flexionPurchase;
 	}
 
 	@Override
 	public void consume(Purchase arg0) {
-		CloseableHttpClient client = HttpClients.createDefault();
-	    HttpPost httpPost = new HttpPost("http://sandbox.flexionmobile.com/javachallenge/rest/developer/​laszlo%20lukacs​/consume/​"+arg0.getId());
-	    try {
-			CloseableHttpResponse response = client.execute(httpPost);
-			client.close();
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		final HttpPost httpPost = new HttpPost("http://sandbox.flexionmobile.com/javachallenge/rest/developer/​laszlo%20lukacs​/consume/​"+arg0.getId());
+	    try (final CloseableHttpClient client = HttpClients.createDefault();
+	    	 final CloseableHttpResponse response = client.execute(httpPost);) {
+		} catch (ClientProtocolException clientProtocolException) {
+			LOGGER.error(CLIENT_PROTOCOL_EXCEPTION + clientProtocolException.getMessage());
+		} catch (IOException ioException) {
+			LOGGER.error(IO_EXCEPTION + ioException.getMessage());
 		}
 	}
 
 	@Override
 	public List<Purchase> getPurchases() {
 		List<Purchase> purchases = new ArrayList<>();
-		CloseableHttpClient client = HttpClients.createDefault();
-	    HttpPost httpGet = new HttpPost("http://sandbox.flexionmobile.com/javachallenge/rest/developer/​laszlo%20lukacs​/buy/all");
-	    try {
-			CloseableHttpResponse response = client.execute(httpGet);
-			HttpEntity entity = response.getEntity();
-		    String content = EntityUtils.toString(entity);
-		    FlexionPurchaseWrapper flexionPurchaseWrapper = new FlexionPurchaseWrapper();
-		    flexionPurchaseWrapper = new Gson().fromJson(content, FlexionPurchaseWrapper.class);
+		final HttpPost httpGet = new HttpPost("http://sandbox.flexionmobile.com/javachallenge/rest/developer/​laszlo%20lukacs​/buy/all");
+		try (final CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
+			final CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpGet);	) {
+			final HttpEntity httpEntity = closeableHttpResponse.getEntity();
+		    final String content = EntityUtils.toString(httpEntity);
+		    final Gson gson = new Gson();
+		    flexionPurchaseWrapper = gson.fromJson(content, FlexionPurchaseWrapper.class);
 		    purchases = flexionPurchaseWrapper.getPurchases();
-			client.close();
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (ClientProtocolException clientProtocolException) {
+			LOGGER.error(CLIENT_PROTOCOL_EXCEPTION + clientProtocolException.getMessage());
+		} catch (IOException ioException) {
+			LOGGER.error(IO_EXCEPTION + ioException.getMessage());
 		}
 		return purchases;
 	}

@@ -9,8 +9,8 @@ public class JavatestApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(JavatestApplication.class, args);
-		FlexionIntegration flexionIntegration = new FlexionIntegration();
-		IntegrationTestRunner integrationTestRunner = new IntegrationTestRunner();
+		final FlexionIntegration flexionIntegration = new FlexionIntegration();
+		final IntegrationTestRunner integrationTestRunner = new IntegrationTestRunner();
 		integrationTestRunner.runTests(flexionIntegration);
 	}
 }

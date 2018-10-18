@@ -3,8 +3,11 @@ package com.flexion.javatest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.flexionmobile.codingchallenge.integration.Purchase;
 
+@Component
 public class FlexionPurchaseWrapper {
 
 	private List<Purchase> purchases;
